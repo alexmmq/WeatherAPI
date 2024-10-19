@@ -53,11 +53,13 @@ public class App
 
             //выводим сегодняшнюю дату
             System.out.println();
-            System.out.println(root.getNow_dt());
+            System.out.println("Время запроса: " + root.getNow_dt());
 
             //выводим температуру на данный момент и сервис предоставивший информацию
-            System.out.println("current temperature is: " + root.getFact().getTemp());
-            System.out.println("we've got info from following url: " + root.getInfo().getUrl());
+            System.out.println("Температура на данный момент: " + root.getFact().getTemp() + " "
+                    + getCorrectForm(root.getFact().getTemp()));
+
+            System.out.println("Информация предоставлена со следующего сервиса: " + root.getInfo().getUrl());
 
             //получаем отдельный лист для последующей работы с данными
             ArrayList<Forecast> forecasts = root.getForecasts();
@@ -79,6 +81,10 @@ public class App
                         forecast.getParts().getEvening().getTemp_avg(), forecast.getDate());
             }
 
+            printAvgTemperature(mapDayAvg);
+            printAvgTemperature(mapNightAvg);
+            printAvgTemperature(mapMorningAvg);
+            printAvgTemperature(mapEveningAvg);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
@@ -90,5 +96,67 @@ public class App
         System.out.println("Средняя температура " + timeOfDay + " : " + temp + " на " + date);
         map.put(timeOfDayEng + date, temp);
         return map;
+    }
+
+    //метод для вывода средней температуры на основе переданной мапы с данными
+    public static void printAvgTemperature(Map<String, Integer> map){
+        ArrayList<Integer> values = new ArrayList<>();
+        ArrayList<String> keys = new ArrayList<>();
+        double avgTemp;
+        int total = 0;
+        String partOfDay = "";
+        String correctWord = "";
+        for(Map.Entry<String, Integer> entry:map.entrySet()){
+            values.add(entry.getValue());
+            keys.add(entry.getKey());
+        }
+
+        if(keys.get(0).contains("day")) {
+            partOfDay = "днем";
+        } else if (keys.get(0).contains("night")) {
+            partOfDay = "ночью";
+        } else if (keys.get(0).contains("morning")) {
+            partOfDay = "утром";
+        } else if (keys.get(0).contains("evening")) {
+            partOfDay = "вечером";
+        }
+
+        switch(values.size()){
+            case 1:
+                correctWord = "день";
+                break;
+            case 2:
+                correctWord = "дня";
+                break;
+            case 3:
+                correctWord = "дня";
+                break;
+            case 4:
+                correctWord = "дня";
+                break;
+            default:
+                correctWord = "дней";
+        }
+        for(int value: values){
+            total +=value;
+        }
+
+        avgTemp = (double) total /values.size();
+        System.out.println("Средняя температура " + partOfDay + " " + avgTemp + " градуса за период в " + values.size()
+                + " " + correctWord);
+    }
+
+    //работа с падежами великого могучего
+    public static String getCorrectForm(int value){
+        String output = "";
+        if((value>-5 && value<1)||(value>1 && value <5)){
+            output = "градуса";
+        } else if((value == 1) || (value == -1)){
+            output = "градус";
+        }
+        else {
+            output = "градусов";
+        }
+        return output;
     }
 }
