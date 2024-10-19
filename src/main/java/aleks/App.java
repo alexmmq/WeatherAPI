@@ -1,16 +1,18 @@
 package aleks;
 
 import aleks.JsonOperations.JsonBeautify;
-import aleks.JsonOperations.JsonToMap;
-import aleks.tasks.Fact;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import entity.root.forecasts.Forecast;
+import entity.root.Root;
 
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,7 +25,7 @@ public class App
         final String key = "84ed91c4-c86d-4168-a383-ba357930d573";
         final String lat = "55.76042";
         final String lon = "49.19029";
-        final String limit = "1";
+        final String limit = "7";
         String output = null;
         HttpClient httpClient = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
@@ -34,53 +36,59 @@ public class App
                 .build();
         try{
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            //System.out.println("Response: " + response.statusCode());
             output = response.body();
-            //System.out.println(output);
         } catch (Exception e) {
             System.err.println("Error making HTTP request: " + e.getMessage());
         }
+
         JsonBeautify jsonBeautify = new JsonBeautify(output);
+
+        //выводим красивый JSON
         System.out.print(jsonBeautify.getPrettyJson());
 
         try {
-            JsonToMap jsonToMap = new JsonToMap(output);
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            Root root = objectMapper.readValue(output, Root.class);
 
-            //1st iteration through original json
-            Map<String, Object> testmap = jsonToMap.getJsonMap();
-            printMap(testmap);
+            //выводим сегодняшнюю дату
+            System.out.println();
+            System.out.println(root.getNow_dt());
 
-            //2nd iteration, looking for the entry of "Fact", sending found string to the fact class
-            jsonToMap = new JsonToMap(findValueInMap(testmap, "fact"));
-            Map<String, Object> testmap2 = jsonToMap.getJsonMap();
+            //выводим температуру на данный момент и сервис предоставивший информацию
+            System.out.println("current temperature is: " + root.getFact().getTemp());
+            System.out.println("we've got info from following url: " + root.getInfo().getUrl());
 
-            //calling method findTemperature
+            //получаем отдельный лист для последующей работы с данными
+            ArrayList<Forecast> forecasts = root.getForecasts();
 
-
-
-
+            //создаем отдельные мапы для последущих операций над информацией полученной от сервиса - для
+            //анализа средних температур днем, ночью, вечером и утром
+            HashMap <String, Integer> mapDayAvg = new HashMap<>();
+            HashMap <String, Integer> mapNightAvg = new HashMap<>();
+            HashMap <String, Integer> mapMorningAvg = new HashMap<>();
+            HashMap <String, Integer> mapEveningAvg = new HashMap<>();
+            for(Forecast forecast : forecasts) {
+                printAndSaveData(mapDayAvg, "днем", "day",
+                        forecast.getParts().getDay().getTemp_avg(), forecast.getDate());
+                printAndSaveData(mapNightAvg, "ночью", "night",
+                        forecast.getParts().getNight().getTemp_avg(), forecast.getDate());
+                printAndSaveData(mapMorningAvg, "утром", "morning",
+                        forecast.getParts().getMorning().getTemp_avg(), forecast.getDate());
+                printAndSaveData(mapEveningAvg, "вечером", "evening",
+                        forecast.getParts().getEvening().getTemp_avg(), forecast.getDate());
+            }
 
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public static void printMap(Map<String, Object> map) {
-        System.out.println();
-        System.out.println("Beginning of printing of map");
-        for(Map.Entry<String, Object> entry : map.entrySet()) {
-            System.out.println(entry.getKey() + ": " + entry.getValue());
-        }
-    }
-
-    // looks for special entry within map
-    public static String findValueInMap(Map<String, Object> map, String key) {
-        String match = null;
-        for(Map.Entry<String, Object> entry : map.entrySet()) {
-            if(entry.getKey().equals(key)) {
-                match = entry.getValue().toString();
-            }
-        }
-        return match;
+    //метод для избавления от повторного кода
+    public static Map<String, Integer> printAndSaveData(Map<String, Integer> map, String timeOfDay,
+                                                        String timeOfDayEng, int temp, String date){
+        System.out.println("Средняя температура " + timeOfDay + " : " + temp + " на " + date);
+        map.put(timeOfDayEng + date, temp);
+        return map;
     }
 }
