@@ -51,10 +51,11 @@ public class App
             printMap(testmap);
 
             //2nd iteration, looking for the entry of "Fact", sending found string to the fact class
-            Fact fact = new Fact(findValueInMap(testmap, "fact"));
+            jsonToMap = new JsonToMap(findValueInMap(testmap, "fact"));
+            Map<String, Object> testmap2 = jsonToMap.getJsonMap();
+
             //calling method findTemperature
-            System.out.println();
-            System.out.println("Current Temperature is: " + fact.findTemp());
+
 
 
 

@@ -1,32 +1,23 @@
 package aleks.tasks;
 
-import aleks.JsonOperations.JsonToMap;
-import com.fasterxml.jackson.core.JsonProcessingException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 //receives string and parses it to map (dedicated only for fact entry)
 
-public class Fact {
-    private String input;
-    private Map<String, Object> fact = new HashMap<>();
+import java.util.ArrayList;
 
-    public Fact(String input) throws JsonProcessingException {
+public class Fact {
+    private Object input;
+    private String searchLiteral = "temp";
+    public Fact(Object input)  {
         this.input = input;
-        JsonToMap jsonToMap = new JsonToMap(input);
-        fact = jsonToMap.getJsonMap();
+
     }
 
-    //method returns all the entries within json file
+    //method returns the temp entry
     public String findTemp(){
         String temp = null;
-        for(Map.Entry<String, Object> entry : fact.entrySet()){
-            if(entry.getKey().equals("temp")){
-                temp = entry.getValue().toString();
-            }
-        }
+        StringBuilder stringBuilder = new StringBuilder();
         return temp;
     }
 }
