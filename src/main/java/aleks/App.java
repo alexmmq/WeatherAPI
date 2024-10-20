@@ -16,8 +16,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Hello world!
- *
+ * Для реализации функционала используются библиотеки Jackson и Lombok.
+ * При работе с json происходит чтение данных напрямую в создаваемые POJO.
+ * Автор: Александр Михайлов
  */
 public class App 
 {
@@ -81,6 +82,8 @@ public class App
                         forecast.getParts().getEvening().getTemp_avg(), forecast.getDate());
             }
 
+            //выводим данные по средним температурам
+            System.out.println();
             printAvgTemperature(mapDayAvg);
             printAvgTemperature(mapNightAvg);
             printAvgTemperature(mapMorningAvg);
